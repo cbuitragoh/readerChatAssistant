@@ -1,4 +1,5 @@
 from openai import OpenAI
+import time
 
 # OpenAI client
 def create_openAI_client(api_key):
@@ -18,6 +19,8 @@ def upload_files_to_assistant(
         file=open(file_input, "rb"),
         purpose="assistants" 
     )
+    time.sleep(2)
+    
     return file if file else "file not uploaded"
 
 
@@ -47,6 +50,20 @@ def create_assistant(
         model=model,
         file_ids=[file_id]
     )
+    return assistant
+
+
+#retrieve assistant
+def retrieve_assistant(
+        client: OpenAI,
+        assistant: dict,
+
+):
+    assistant = client.beta.assistant.retrieve(
+        assistant_id=assistant.id
+
+    )
+
     return assistant
 
 

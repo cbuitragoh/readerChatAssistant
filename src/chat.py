@@ -9,9 +9,9 @@ from assistant import (
     upload_files_to_assistant,
     uploader_files_list,
     evaluate_run_status,
-    retrive_messages
+    retrive_messages,
+    retrieve_assistant
 )
-
 # web page title
 st.title(':green[Assistant reader app] :book:')
 
@@ -30,7 +30,24 @@ with st.sidebar:
     )
     print("file:", file)
     
+#Assistant settings
+client = create_openAI_client(openai_api_key)
 
+file_loaded = upload_files_to_assistant(
+                    client=client,
+                    #file_input=file["upload_url"]
+                )
+
+assistant = create_assistant(
+                    client=client,
+                    file_id=file_loaded.id,
+                )
+
+thread = create_thread(
+                    client=client
+                )
+
+#convarsation
 if prompt := st.chat_input(
     placeholder="Welcome to our app! write what you want to consult in your document",
     max_chars=100
@@ -48,25 +65,6 @@ if prompt := st.chat_input(
                 st.error("Please upload a file to continue.")
                 st.stop()
             else:
-                print("1")
-                client = create_openAI_client(openai_api_key)
-                print("2")
-                #file_ids_base = uploader_files_list(file_id=file)
-                print("3")
-                file_loaded = upload_files_to_assistant(
-                    client=client,
-                    #file_input=file["upload_url"]
-                )
-                print("4")
-                assistant = create_assistant(
-                    client=client,
-                    file_id=file_loaded.id,
-                )
-                print("5")
-                thread = create_thread(
-                    client=client
-                )
-                print("6")
                 message = create_message(
                     client=client,
                     thread=thread,

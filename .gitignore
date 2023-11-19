@@ -1,0 +1,11 @@
+#private docs
+base_docs
+
+#cache folder
+__pycache__
+
+#virtual environment
+.venv
+
+#jupyter notebooks
+*.ipynb

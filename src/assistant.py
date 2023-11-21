@@ -1,5 +1,6 @@
 from openai import OpenAI
-import time
+import os
+import shutil
 
 # OpenAI client
 def create_openAI_client(api_key):
@@ -19,9 +20,26 @@ def upload_files_to_assistant(
         file=open(file_input, "rb"),
         purpose="assistants" 
     )
-    time.sleep(2)
-    
+
     return file if file else "file not uploaded"
+
+
+#save temporary files
+def save_temporary_files(file):
+    if not os.path.exists("src/temp"):
+        os.mkdir("src/temp")
+    
+    with open(f"src/temp/{file.name}", "wb") as f:
+        bytes_data = file.getvalue()
+        f.write(bytes_data)
+
+    return f"src/temp/{file.name}"
+
+
+# delete temporary files
+def delete_temporary_files():
+    if os.path.exists("src/temp"):
+        shutil.rmtree("src/temp")
 
 
 #create list of file ids
@@ -37,8 +55,8 @@ def uploader_files_list(
 def create_assistant(
         client: OpenAI,
         file_id: str,
-        name: str = "Cadaster Assistant",
-        instructions: str = "You are a Cadaster expert. Especialized in Colombian cadaster. If you don't have the best response for user, you search in docs attached to retrieve information about Colombian Cadaster",
+        name: str = "Helper Assistant",
+        instructions: str = "You are a help assistant. Especialized in read technical-legal docs. You must respond based on attaching document",
         tools: list = [{"type": "retrieval"}],
         model: str = "gpt-4-1106-preview"
         
@@ -79,7 +97,7 @@ def create_message(
           thread: dict,
           file_ids: str,
           role: str = "user",
-          content: str = "¿Cuál es el aspecto jurídico del catastro en general?"
+          content: str = "¿Cuál es el título del documento?"
 ):
     message = client.beta.threads.messages.create(
       thread_id=thread.id,
@@ -129,5 +147,24 @@ def retrive_messages(
                 thread_id=thread.id
     )  
     return messages.data[0].content[0].text.value
+
+
+#check uploaded files
+def check_uploaded_files(
+        client: OpenAI,
+        filename
+):
+    if filename == None:
+        return False
+    else:
+        files_uploaded = client.files.list(
+            purpose="assistants",
+        )
+        filenames_retrieved = [file.filename for file in files_uploaded.data]
+
+        if filename.name in filenames_retrieved:
+            return True
+        else:
+            return False
 
 

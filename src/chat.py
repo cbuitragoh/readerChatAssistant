@@ -1,5 +1,4 @@
 import streamlit as st
-import asyncio
 from assistant import (
     check_uploaded_files,
     create_openAI_client,
@@ -27,8 +26,14 @@ delete_temporary_files()
 if "api_key" not in st.session_state:
     st.session_state.api_key = False
 
-def set_api_key():
-    st.session_state.api_key = True
+def set_api_key(state_api: bool):
+    st.session_state.api_key = state_api
+
+if "len_api_key" not in st.session_state:
+    st.session_state.len_api_key = 0
+
+def set_len_api_key(len_api_key: int):
+    st.session_state.len_api_key = len_api_key
 
 if "client" not in st.session_state:
     st.session_state.client = None
@@ -65,7 +70,7 @@ if "logger" not in st.session_state:
 
 
 # web page title
-st.title(':green[Assistant reader app] :book:')
+st.title(':green[Reader Assistant app] :book:')
 
 # sidebar
 with st.sidebar:
@@ -73,7 +78,8 @@ with st.sidebar:
         "OpenAI API Key",
         key="chatbot_api_key",
         type="password",
-        on_change=set_api_key
+        on_change=set_api_key,
+        args=(True,)
     )
     "[Get an OpenAI API key](https://platform.openai.com/account/api-keys)"
     file = st.file_uploader(
@@ -85,7 +91,8 @@ with st.sidebar:
     )
     
 #Assistant settings
-if st.session_state.api_key == True:
+set_len_api_key(len(openai_api_key))
+if st.session_state.api_key == True and st.session_state.len_api_key > 0:
     if st.session_state.client == None:
         client = create_openAI_client(openai_api_key)
         set_client(client)
@@ -151,7 +158,7 @@ if prompt := st.chat_input(
         st.info("Please type a query to continue.")
         st.stop()
     else:
-        st.chat_message(":standing_person:").write(prompt)
+        st.chat_message("user").write(prompt)
         try:
             message = create_message(
                 client=client,

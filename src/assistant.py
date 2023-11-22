@@ -1,12 +1,19 @@
-from openai import OpenAI
+from openai import OpenAI, AuthenticationError
+from instructions import instructions
 import os
 import shutil
+import sys
 
 # OpenAI client
 def create_openAI_client(api_key):
     # create OpenAI client
     client = OpenAI(api_key=api_key)
-    return client
+    try:
+        client.models.list()
+        return client
+    except AuthenticationError as error:
+        sys.tracebacklimit = 0
+        raise error
     
 
 # upload files to assistant
@@ -20,7 +27,6 @@ def upload_files_to_assistant(
         file=open(file_input, "rb"),
         purpose="assistants" 
     )
-
     return file if file else "file not uploaded"
 
 
@@ -55,8 +61,8 @@ def uploader_files_list(
 def create_assistant(
         client: OpenAI,
         file_id: str,
-        name: str = "Helper Assistant",
-        instructions: str = "You are a help assistant. Especialized in read technical-legal docs. You must respond based on attaching document",
+        name: str = "Reader Assistant",
+        instructions: str = instructions,
         tools: list = [{"type": "retrieval"}],
         model: str = "gpt-4-1106-preview"
         
@@ -81,7 +87,6 @@ def retrieve_assistant(
         assistant_id=assistant.id
 
     )
-
     return assistant
 
 
@@ -97,7 +102,7 @@ def create_message(
           thread: dict,
           file_ids: str,
           role: str = "user",
-          content: str = "¿Cuál es el título del documento?"
+          content: str = "¿What is the document title?"
 ):
     message = client.beta.threads.messages.create(
       thread_id=thread.id,
@@ -117,7 +122,7 @@ def create_runs(
     run = client.beta.threads.runs.create(
       thread_id=thread.id,
       assistant_id=assistant.id,
-      instructions="Please address the user as Carlos. The user has a premium account."
+      instructions=instructions
     )
     return run
 
@@ -135,7 +140,6 @@ def evaluate_run_status(
             )
         if runner.status == "completed":
             break
-
     return runner.status
 
 #retrieve messages
